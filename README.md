@@ -8,7 +8,7 @@ Export [Z.Blazor.Diagrams](https://github.com/Blazor-Diagrams/Blazor.Diagrams) c
 
 ## The Problem
 
-`Blazor.Diagrams` renders nodes as HTML/CSS and links as SVG paths inside a viewport with CSS transforms for pan/zoom. The common export workaround -- `html2canvas` -- is fundamentally broken for diagrams:
+`Blazor.Diagrams` renders nodes as HTML/CSS and links as SVG paths inside a viewport with CSS transforms for pan/zoom. The problems I encountered with other libraries includes:
 
 - **CSS transforms cause phantom artifacts and incorrect positioning** -- nodes appear offset or duplicated
 - **SVG elements (links, arrows) are not rendered at all** -- only the nodes appear in the export
