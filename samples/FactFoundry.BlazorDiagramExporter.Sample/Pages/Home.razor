@@ -1,0 +1,315 @@
+@page "/"
+@using Blazor.Diagrams.Core.PathGenerators
+@using Blazor.Diagrams.Core.Routers
+@using Blazor.Diagrams.Core.Models
+@inject DiagramExporter Exporter
+
+<h1>Blazor Diagram Exporter Sample</h1>
+
+<div class="tabs">
+    <button class="tab @(_activeTab == "small" ? "active" : "")" @onclick='() => SetTab("small")'>Small Model</button>
+    <button class="tab @(_activeTab == "large" ? "active" : "")" @onclick='() => SetTab("large")'>Large Model</button>
+</div>
+
+<div class="toolbar">
+    <button @onclick="ExportPng">Export PNG</button>
+    <button @onclick="ExportPdf">Export PDF</button>
+    <button class="custom" @onclick="ExportPngCustom">Export PNG (Custom)</button>
+    <label class="toggle">
+        <input type="checkbox" checked="@_useSmoothLinks" @onchange="ToggleLinkStyle" />
+        Smooth links
+    </label>
+    <label class="toggle">
+        <input type="checkbox" checked="@_showArrows" @onchange="ToggleArrows" />
+        Arrows
+    </label>
+</div>
+
+<div class="diagram-container" @key="_activeTab">
+    <CascadingValue Value="_diagram">
+        <DiagramCanvas />
+    </CascadingValue>
+</div>
+
+@code {
+    private BlazorDiagram _diagram = null!;
+    private bool _useSmoothLinks = true;
+    private bool _showArrows;
+    private string _activeTab = "small";
+
+    protected override void OnInitialized()
+    {
+        BuildSmallModel();
+    }
+
+    private void SetTab(string tab)
+    {
+        if (_activeTab == tab) return;
+        _activeTab = tab;
+
+        if (tab == "small")
+            BuildSmallModel();
+        else
+            BuildLargeModel();
+    }
+
+    private BlazorDiagram CreateDiagram()
+    {
+        var diagram = new BlazorDiagram(new BlazorDiagramOptions(), true);
+        diagram.RegisterComponent<NodeModel, DefaultNodeWidget>();
+        return diagram;
+    }
+
+    private void BuildSmallModel()
+    {
+        _diagram = CreateDiagram();
+        ApplyLinkStyle();
+
+        var customers = new NodeModel("Customers", new Point(50, 50)) { Title = "Customers" };
+        var custId = customers.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(customers);
+
+        var orders = new NodeModel("Orders", new Point(350, 30)) { Title = "Orders" };
+        var orderCustId = orders.AddPort(PortAlignment.Left);
+        var orderId = orders.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(orders);
+
+        var products = new NodeModel("Products", new Point(350, 280)) { Title = "Products" };
+        var productId = products.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(products);
+
+        var orderItems = new NodeModel("OrderItems", new Point(650, 130)) { Title = "OrderItems" };
+        var oiOrderId = orderItems.AddPort(PortAlignment.Left);
+        var oiProductId = orderItems.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(orderItems);
+
+        _diagram.Links.Add(new LinkModel(custId, orderCustId));
+        _diagram.Links.Add(new LinkModel(orderId, oiOrderId));
+        _diagram.Links.Add(new LinkModel(productId, oiProductId));
+
+        ApplyArrows();
+    }
+
+    private void BuildLargeModel()
+    {
+        _diagram = CreateDiagram();
+        ApplyLinkStyle();
+
+        var allPorts = new Dictionary<string, PortModel>();
+
+        // Users domain
+        var users = new NodeModel("Users", new Point(50, 50)) { Title = "Users" };
+        allPorts["users_id"] = users.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(users);
+
+        var userProfiles = new NodeModel("UserProfiles", new Point(350, 0)) { Title = "UserProfiles" };
+        allPorts["up_userId"] = userProfiles.AddPort(PortAlignment.Left);
+        allPorts["up_id"] = userProfiles.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(userProfiles);
+
+        var userRoles = new NodeModel("UserRoles", new Point(350, 150)) { Title = "UserRoles" };
+        allPorts["ur_userId"] = userRoles.AddPort(PortAlignment.Left);
+        allPorts["ur_roleId"] = userRoles.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(userRoles);
+
+        var roles = new NodeModel("Roles", new Point(650, 150)) { Title = "Roles" };
+        allPorts["roles_id"] = roles.AddPort(PortAlignment.Left);
+        allPorts["roles_out"] = roles.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(roles);
+
+        var permissions = new NodeModel("Permissions", new Point(950, 150)) { Title = "Permissions" };
+        allPorts["perm_roleId"] = permissions.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(permissions);
+
+        // Orders domain
+        var orders = new NodeModel("Orders", new Point(50, 350)) { Title = "Orders" };
+        allPorts["orders_userId"] = orders.AddPort(PortAlignment.Top);
+        allPorts["orders_id"] = orders.AddPort(PortAlignment.Right);
+        allPorts["orders_shippingId"] = orders.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(orders);
+
+        var orderItems = new NodeModel("OrderItems", new Point(350, 350)) { Title = "OrderItems" };
+        allPorts["oi_orderId"] = orderItems.AddPort(PortAlignment.Left);
+        allPorts["oi_productId"] = orderItems.AddPort(PortAlignment.Right);
+        allPorts["oi_discountId"] = orderItems.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(orderItems);
+
+        var products = new NodeModel("Products", new Point(650, 300)) { Title = "Products" };
+        allPorts["prod_id"] = products.AddPort(PortAlignment.Left);
+        allPorts["prod_catId"] = products.AddPort(PortAlignment.Right);
+        allPorts["prod_supplierId"] = products.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(products);
+
+        var categories = new NodeModel("Categories", new Point(950, 300)) { Title = "Categories" };
+        allPorts["cat_id"] = categories.AddPort(PortAlignment.Left);
+        allPorts["cat_parentId"] = categories.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(categories);
+
+        var suppliers = new NodeModel("Suppliers", new Point(650, 500)) { Title = "Suppliers" };
+        allPorts["sup_id"] = suppliers.AddPort(PortAlignment.Top);
+        allPorts["sup_addressId"] = suppliers.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(suppliers);
+
+        // Shipping & payments
+        var shipping = new NodeModel("Shipping", new Point(50, 550)) { Title = "Shipping" };
+        allPorts["ship_id"] = shipping.AddPort(PortAlignment.Top);
+        allPorts["ship_carrierId"] = shipping.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(shipping);
+
+        var carriers = new NodeModel("Carriers", new Point(350, 550)) { Title = "Carriers" };
+        allPorts["carrier_id"] = carriers.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(carriers);
+
+        var payments = new NodeModel("Payments", new Point(350, 700)) { Title = "Payments" };
+        allPorts["pay_orderId"] = payments.AddPort(PortAlignment.Left);
+        allPorts["pay_methodId"] = payments.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(payments);
+
+        var paymentMethods = new NodeModel("PaymentMethods", new Point(650, 700)) { Title = "PaymentMethods" };
+        allPorts["pm_id"] = paymentMethods.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(paymentMethods);
+
+        // Discounts & inventory
+        var discounts = new NodeModel("Discounts", new Point(350, 500)) { Title = "Discounts" };
+        allPorts["disc_id"] = discounts.AddPort(PortAlignment.Top);
+        _diagram.Nodes.Add(discounts);
+
+        var inventory = new NodeModel("Inventory", new Point(950, 500)) { Title = "Inventory" };
+        allPorts["inv_productId"] = inventory.AddPort(PortAlignment.Left);
+        allPorts["inv_warehouseId"] = inventory.AddPort(PortAlignment.Right);
+        _diagram.Nodes.Add(inventory);
+
+        var warehouses = new NodeModel("Warehouses", new Point(1200, 500)) { Title = "Warehouses" };
+        allPorts["wh_id"] = warehouses.AddPort(PortAlignment.Left);
+        allPorts["wh_addressId"] = warehouses.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(warehouses);
+
+        var addresses = new NodeModel("Addresses", new Point(950, 700)) { Title = "Addresses" };
+        allPorts["addr_id_sup"] = addresses.AddPort(PortAlignment.Left);
+        allPorts["addr_id_wh"] = addresses.AddPort(PortAlignment.Top);
+        _diagram.Nodes.Add(addresses);
+
+        // Reviews & tags
+        var reviews = new NodeModel("Reviews", new Point(950, 0)) { Title = "Reviews" };
+        allPorts["rev_userId"] = reviews.AddPort(PortAlignment.Left);
+        allPorts["rev_productId"] = reviews.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(reviews);
+
+        var tags = new NodeModel("Tags", new Point(1200, 300)) { Title = "Tags" };
+        allPorts["tags_id"] = tags.AddPort(PortAlignment.Left);
+        _diagram.Nodes.Add(tags);
+
+        var productTags = new NodeModel("ProductTags", new Point(1200, 150)) { Title = "ProductTags" };
+        allPorts["pt_productId"] = productTags.AddPort(PortAlignment.Left);
+        allPorts["pt_tagId"] = productTags.AddPort(PortAlignment.Bottom);
+        _diagram.Nodes.Add(productTags);
+
+        // Links
+        _diagram.Links.Add(new LinkModel(allPorts["users_id"], allPorts["up_userId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["users_id"], allPorts["ur_userId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["ur_roleId"], allPorts["roles_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["roles_out"], allPorts["perm_roleId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["orders_userId"], allPorts["users_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["orders_id"], allPorts["oi_orderId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["oi_productId"], allPorts["prod_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["prod_catId"], allPorts["cat_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["cat_parentId"], allPorts["cat_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["prod_supplierId"], allPorts["sup_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["orders_shippingId"], allPorts["ship_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["ship_carrierId"], allPorts["carrier_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["orders_id"], allPorts["pay_orderId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["pay_methodId"], allPorts["pm_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["oi_discountId"], allPorts["disc_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["prod_id"], allPorts["inv_productId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["inv_warehouseId"], allPorts["wh_id"]));
+        _diagram.Links.Add(new LinkModel(allPorts["sup_addressId"], allPorts["addr_id_sup"]));
+        _diagram.Links.Add(new LinkModel(allPorts["wh_addressId"], allPorts["addr_id_wh"]));
+        _diagram.Links.Add(new LinkModel(allPorts["up_id"], allPorts["rev_userId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["prod_id"], allPorts["rev_productId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["prod_id"], allPorts["pt_productId"]));
+        _diagram.Links.Add(new LinkModel(allPorts["pt_tagId"], allPorts["tags_id"]));
+
+        ApplyArrows();
+    }
+
+    private void ToggleLinkStyle(ChangeEventArgs e)
+    {
+        _useSmoothLinks = (bool)(e.Value ?? false);
+        ApplyLinkStyle();
+        _diagram.Refresh();
+    }
+
+    private void ToggleArrows(ChangeEventArgs e)
+    {
+        _showArrows = (bool)(e.Value ?? false);
+        ApplyArrows();
+        _diagram.Refresh();
+    }
+
+    private void ApplyArrows()
+    {
+        var marker = _showArrows ? LinkMarker.Arrow : null;
+        foreach (var link in _diagram.Links)
+        {
+            link.SourceMarker = null;
+            link.TargetMarker = marker;
+            link.Refresh();
+        }
+    }
+
+    private void ApplyLinkStyle()
+    {
+        var router = new NormalRouter();
+        PathGenerator pathGen = _useSmoothLinks
+            ? new SmoothPathGenerator()
+            : new StraightPathGenerator();
+
+        _diagram.Options.Links.DefaultRouter = router;
+        _diagram.Options.Links.DefaultPathGenerator = pathGen;
+
+        foreach (var link in _diagram.Links)
+        {
+            link.Router = router;
+            link.PathGenerator = pathGen;
+            link.Refresh();
+        }
+    }
+
+    private async Task ExportPng()
+    {
+        var name = _activeTab == "small" ? "diagram-small" : "diagram-large";
+        await Exporter.ExportAsPngAsync(_diagram, new DiagramExportOptions
+        {
+            FileName = name
+        });
+    }
+
+    private async Task ExportPdf()
+    {
+        var name = _activeTab == "small" ? "diagram-small" : "diagram-large";
+        await Exporter.ExportAsPdfAsync(_diagram, new DiagramExportOptions
+        {
+            FileName = name
+        });
+    }
+
+    private async Task ExportPngCustom()
+    {
+        var name = _activeTab == "small" ? "diagram-small-custom" : "diagram-large-custom";
+        await Exporter.ExportAsPngAsync(_diagram, new DiagramExportOptions
+        {
+            FileName = name,
+            NodeRenderer = node => new NodeRenderInfo
+            {
+                HeaderText = node.Title ?? node.Id,
+                HeaderColor = "#2d7d46",
+                HeaderTextColor = "#ffffff",
+                BodyText = "Sample node",
+                BodyTextColor = "#15803d",
+                BodyColor = "#f0fdf4",
+                BorderColor = "#16a34a",
+                BorderRadius = 12.0
+            }
+        });
+    }
+}

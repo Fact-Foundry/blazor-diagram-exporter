@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <PackageId>FactFoundry.BlazorDiagramExporter</PackageId>
+    <Authors>Kevin Williams</Authors>
+    <Company>FactFoundry</Company>
+    <Description>Exports Blazor.Diagrams canvases to SVG, PNG, and PDF by rendering directly from the diagram model — bypassing the DOM entirely. SVG-first architecture with optional rasterization. Zero external dependencies.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/FactFoundry/blazor-diagram-exporter</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/FactFoundry/blazor-diagram-exporter</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>blazor;diagrams;export;svg;png;pdf;diagram;z-blazor-diagrams</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Z.Blazor.Diagrams" Version="3.*" />
+  </ItemGroup>
+
+</Project>

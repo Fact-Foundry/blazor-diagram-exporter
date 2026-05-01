@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FactFoundry.BlazorDiagramExporter/FactFoundry.BlazorDiagramExporter.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FactFoundry.BlazorDiagramExporter.Tests/FactFoundry.BlazorDiagramExporter.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/FactFoundry.BlazorDiagramExporter.Sample/FactFoundry.BlazorDiagramExporter.Sample.csproj" />
+  </Folder>
+</Solution>
