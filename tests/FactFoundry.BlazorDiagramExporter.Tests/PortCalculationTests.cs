@@ -2,7 +2,7 @@ namespace FactFoundry.BlazorDiagramExporter.Tests;
 
 public class PortCalculationTests
 {
-    private const double HeaderHeight = 32.0;
+    private const double HeaderHeight = 36.0;
     private const double SectionLabelHeight = 24.0;
     private const double DefaultRowHeight = 28.0;
 

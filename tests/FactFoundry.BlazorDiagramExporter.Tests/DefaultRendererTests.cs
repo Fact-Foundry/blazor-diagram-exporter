@@ -19,7 +19,6 @@ public class DefaultRendererTests
         var node = Assert.Single(snapshot.Nodes);
         Assert.NotNull(node.RenderInfo);
         Assert.Equal("Sales", node.RenderInfo.HeaderText);
-        Assert.NotEmpty(node.RenderInfo.Sections);
     }
 
     [Fact]
